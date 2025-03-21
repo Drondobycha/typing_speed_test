@@ -40,6 +40,19 @@ func HandlerLogin(c *gin.Context, s *database.Store) {
 }
 
 func HandlerRegister(c *gin.Context, s *database.Store) {
+	var data models.User
+	err := c.ShouldBindJSON(&data)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Неверный формат данных"})
+		return
+	}
+	hashed, err := utils.hashPassword(data.Password)
+	err = s.SaveUser(data)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Ошибка регистрации пользователя"})
+		return
+	}
+
 	c.JSON(http.StatusOK, gin.H{"message": "Регистрация прошла успешно"})
 }
 

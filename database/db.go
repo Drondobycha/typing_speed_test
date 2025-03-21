@@ -31,7 +31,7 @@ func Newstore(connStr string) (*Store, error) {
 	}
 
 	_, err = pool.Exec(context.Background(), `
-			CREATE TABLE IF NOT EXISTS user (
+			CREATE TABLE IF NOT EXISTS users (
 					ID serial primary key,
 					Username TEXT UNIQUE,
 					Password TEXT,
@@ -68,13 +68,13 @@ func (s *Store) SaveUser(user models.User) error {
 		return fmt.Errorf("failed to begin transaction: %w", err)
 	}
 	defer func() {
-		if err := tx.Rollback(ctx); err != nil && errors.Is(err, pgx.ErrTxClosed) {
+		if err := tx.Rollback(ctx); err != nil && !errors.Is(err, pgx.ErrTxClosed) {
 			log.Printf("failed to rollback transaction: %v", err)
 		}
 	}()
 
 	_, err = tx.Exec(ctx, `
-		INSERT INTO user (Username, Password, Email) VALUES ($1, $2, $3)
+		INSERT INTO users (Username, Password, Email) VALUES ($1, $2, $3)
 	`, user.Username, user.Password, user.Email)
 	if err != nil {
 		var DataBaseErr *pgconn.PgError
